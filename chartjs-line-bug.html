@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"
+            integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.3.0/css/bootstrap-slider.min.css"
+          integrity="sha256-5CPCPkIEqAQPBWSQ9R4Qo6lMEoZ3GIggaVsQmtB0Kpg=" crossorigin="anonymous"/>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.3.0/bootstrap-slider.min.js"
+            integrity="sha256-WQ11JL7U13ZAhL9o6iJQCRLAHNg5NUyIVZRLYqxUexY=" crossorigin="anonymous"></script>
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.3.0/Chart.min.js"
+            integrity="sha256-w8BXa9KXx+nmhO9N4hupvlLy+cAtqEarnB40DVJx2xA=" crossorigin="anonymous"></script>
+
+    <style>
+        .slider {
+            margin-left: 16px;
+            margin-right: 16px;
+        }
+
+        .slider-selection {
+            background-image: linear-gradient(to bottom, #89cdef 0, #81bfde 100%);
+        }
+    </style>
+</head>
+<body>
+<div style="display: flex; justify-content: center; align-items: center">
+    <form style="margin-right: 20px">
+        <input type="radio" name="type" value="line" checked> Lines<br>
+        <input type="radio" name="type" value="bubble"> Points<br>
+    </form>
+    <form>
+        <input type="checkbox" class="filter" value="filter"> Filter points outside of min/max<br>
+    </form>
+</div>
+<div style="max-width: 800px; margin: 0 auto">
+    <canvas class="chart"></canvas>
+</div>
+<div align="center">
+    <span>min</span><input class="slider"/><span>max</span>
+</div>
+</body>
+
+<script>
+    var chart, slider;
+    var min = 0;
+    var max = 99;
+    var step = 3;
+    var data = [];
+    for (var i = min; i <= max; i += step) {
+        data.push({x: i, y: Math.random()});
+    }
+
+    $('input:radio').change(function() {
+        if ($(this).is(':checked')) {
+            init();
+        }
+    });
+
+    $('input:checkbox').change(function() {
+        init();
+    });
+
+    init();
+
+    function init() {
+        if (chart) chart.destroy();
+        if (slider) slider.destroy();
+
+        var type = $('input:radio[name=type]:checked').val();
+        chart = new Chart(document.querySelector('.chart'), {
+            type: type,
+            data: {
+                datasets: [{
+                    label: 'Data',
+                    data: data,
+                    backgroundColor: 'rgba(0,220,0,0.6)'
+                }]
+            },
+            options: {
+                scales: {
+                    xAxes: [{
+                        type: 'linear',
+                        position: 'bottom',
+                        ticks: {
+                            min: min,
+                            max: max,
+                            minRotation: 30,
+                            maxRotation: 30
+                        }
+                    }]
+                }
+            }
+        });
+
+        slider = new Slider(document.querySelector('.slider'), {
+            min: min,
+            max: max,
+            value: [min, max]
+        }).on("slide", function(d) {
+            var ticks = chart.options.scales.xAxes[0].ticks;
+            var start = d[0];
+            var end = d[1];
+
+            ticks.min = start;
+            ticks.max = end;
+            if ($(".filter").is(':checked')) {
+                chart.data.datasets[0].data = data.filter(function(point) {
+                    return point.x >= start - step && point.x <= end + step;
+                });
+            }
+            chart.update();
+        });
+    }
+</script>
+</html>
